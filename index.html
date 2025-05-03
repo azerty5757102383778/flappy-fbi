@@ -51,6 +51,16 @@
       max-width: 200px;
       z-index: 11;
     }
+    #deadVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 100;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -61,7 +71,7 @@
     <canvas id="gameCanvas"></canvas>
     <audio id="bgMusic" src="bg-music.mp3" loop></audio>
     <audio id="deathSound" src="death-sound.mp3"></audio>
-    <audio id="deadFullScreen" src="dead.mp4"></audio>
+    <video id="deadVideo" src="dead.mp4" autoplay muted></video>
   </div>
 
   <script>
@@ -74,7 +84,7 @@
     const startScreen = document.getElementById("startScreen");
     const bgMusic = document.getElementById("bgMusic");
     const deathSound = document.getElementById("deathSound");
-    const deadFullScreen = document.getElementById("deadFullScreen");
+    const deadVideo = document.getElementById("deadVideo");
 
     const planeImg = new Image();
     planeImg.src = "plane.png";
@@ -175,7 +185,8 @@
       gameOver = true;
       bgMusic.pause();
       deathSound.play();
-      deadFullScreen.play();
+      deadVideo.style.display = "block";
+      deadVideo.play();
       if (document.fullscreenEnabled) {
         document.body.requestFullscreen().catch(err => console.warn(err));
       }
