@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Plane</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: skyblue;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: url('background.png') repeat-x;
+      background-size: cover;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <audio id="bgMusic" src="bg-music.mp3" loop></audio>
+  <audio id="deathSound" src="death-sound.mp3"></audio>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const planeImg = new Image();
+    planeImg.src = "plane.png";
+
+    let plane = {
+      x: 50,
+      y: 150,
+      width: 40,
+      height: 30,
+      gravity: 0.6,
+      lift: -10,
+      velocity: 0
+    };
+
+    let pipes = [];
+    let pipeWidth = 50;
+    let pipeGap = 140;
+    let frame = 0;
+    let gameOver = false;
+
+    const bgMusic = document.getElementById("bgMusic");
+    const deathSound = document.getElementById("deathSound");
+
+    function resetGame() {
+      plane.y = 150;
+      plane.velocity = 0;
+      pipes = [];
+      frame = 0;
+      gameOver = false;
+      bgMusic.currentTime = 0;
+      bgMusic.play();
+    }
+
+    function drawPlane() {
+      ctx.drawImage(planeImg, plane.x, plane.y, plane.width, plane.height);
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "green";
+      for (let i = 0; i < pipes.length; i++) {
+        let p = pipes[i];
+        ctx.fillRect(p.x, 0, pipeWidth, p.top);
+        ctx.fillRect(p.x, p.bottom, pipeWidth, canvas.height - p.bottom);
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      plane.velocity += plane.gravity;
+      plane.y += plane.velocity;
+
+      if (frame % 100 === 0) {
+        let top = Math.random() * (canvas.height - pipeGap - 100);
+        let bottom = top + pipeGap;
+        pipes.push({ x: canvas.width, top, bottom });
+      }
+
+      for (let i = 0; i < pipes.length; i++) {
+        pipes[i].x -= 2;
+
+        if (
+          plane.x < pipes[i].x + pipeWidth &&
+          plane.x + plane.width > pipes[i].x &&
+          (plane.y < pipes[i].top || plane.y + plane.height > pipes[i].bottom)
+        ) {
+          gameOver = true;
+          bgMusic.pause();
+          deathSound.play();
+        }
+      }
+
+      if (plane.y + plane.height > canvas.height || plane.y < 0) {
+        gameOver = true;
+        bgMusic.pause();
+        deathSound.play();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlane();
+      drawPipes();
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      frame++;
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener("keydown", function (e) {
+      if (e.code === "Space" && !gameOver) {
+        plane.velocity = plane.lift;
+      } else if (e.code === "Enter" && gameOver) {
+        resetGame();
+      }
+    });
+
+    planeImg.onload = () => {
+      bgMusic.play();
+      gameLoop();
+    };
+  </script>
+</body>
+</html>
