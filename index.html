@@ -13,13 +13,18 @@
       font-family: sans-serif;
       height: 100vh;
       width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       touch-action: manipulation;
     }
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 100vh; /* Le jeu occupe toute la hauteur */
+      max-width: 480px;
+      height: 100vh;
       overflow: hidden;
+      background: white;
     }
     canvas {
       width: 100%;
@@ -60,6 +65,7 @@
   </style>
 </head>
 <body>
+  <video id="deadVideo" src="dead.mp4" muted></video>
   <div class="canvas-container">
     <div id="startScreen">
       <img id="splashImage" src="splash.png" alt="Splash">
@@ -67,15 +73,13 @@
     <canvas id="gameCanvas"></canvas>
     <audio id="bgMusic" src="bg-music.mp3" loop></audio>
     <audio id="deathSound" src="death-sound.mp3"></audio>
-    <video id="deadVideo" src="dead.mp4" autoplay muted></video>
   </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const container = document.querySelector(".canvas-container");
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
 
     const startScreen = document.getElementById("startScreen");
     const bgMusic = document.getElementById("bgMusic");
@@ -120,6 +124,7 @@
       gameOver = false;
       bgMusic.currentTime = 0;
       bgMusic.play();
+      canvas.style.display = "block";
     }
 
     function drawBackground() {
@@ -129,11 +134,9 @@
       if (skyOffset <= -canvas.width) skyOffset = 0;
       if (landOffset <= -canvas.width) landOffset = 0;
 
-      // Dessiner le ciel (ne pas étirer)
       ctx.drawImage(skyImg, skyOffset, 0, canvas.width, canvas.height);
       ctx.drawImage(skyImg, skyOffset + canvas.width, 0, canvas.width, canvas.height);
 
-      // Dessiner le sol (ne pas étirer)
       ctx.drawImage(landImg, landOffset, canvas.height - 100, canvas.width, 100);
       ctx.drawImage(landImg, landOffset + canvas.width, canvas.height - 100, canvas.width, 100);
     }
@@ -183,16 +186,22 @@
       gameOver = true;
       bgMusic.pause();
       deathSound.play();
-      deadVideo.style.display = "block"; // Montrer la vidéo de mort
-      deadVideo.play(); // Jouer la vidéo de mort
-      canvas.style.display = "none"; // Cacher le jeu (canvas)
-      
+      canvas.style.display = "none";
+      deadVideo.style.display = "block";
+      deadVideo.play();
+      if (deadVideo.requestFullscreen) {
+        deadVideo.requestFullscreen();
+      } else if (deadVideo.webkitRequestFullscreen) {
+        deadVideo.webkitRequestFullscreen();
+      } else if (deadVideo.msRequestFullscreen) {
+        deadVideo.msRequestFullscreen();
+      }
+
       deadVideo.onended = () => {
-        // Quand la vidéo est terminée, recommencer le jeu
-        gameOver = false;
+        document.exitFullscreen?.();
         deadVideo.style.display = "none";
         resetGame();
-        startScreen.style.display = "flex"; // Afficher l'écran de démarrage pour recommencer
+        startScreen.style.display = "flex";
       };
     }
 
