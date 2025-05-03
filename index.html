@@ -13,11 +13,17 @@
       font-family: sans-serif;
       height: 100vh;
       width: 100vw;
+      touch-action: manipulation;
     }
     canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+      width: 100vh;
+      height: 100vw;
+      transform: rotate(90deg);
+      transform-origin: left top;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     #startScreen {
       position: absolute;
@@ -52,16 +58,18 @@
   <canvas id="gameCanvas"></canvas>
   <audio id="bgMusic" src="bg-music.mp3" loop></audio>
   <audio id="deathSound" src="death-sound.mp3"></audio>
+  <audio id="deadFullScreen" src="dead.mp3"></audio>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerHeight;
+    canvas.height = window.innerWidth;
 
     const startScreen = document.getElementById("startScreen");
     const bgMusic = document.getElementById("bgMusic");
     const deathSound = document.getElementById("deathSound");
+    const deadFullScreen = document.getElementById("deadFullScreen");
 
     const planeImg = new Image();
     planeImg.src = "plane.png";
@@ -149,16 +157,22 @@
           plane.x + plane.width > p.x &&
           (plane.y < p.top || plane.y + plane.height > p.bottom)
         ) {
-          gameOver = true;
-          bgMusic.pause();
-          deathSound.play();
+          triggerGameOver();
         }
       }
 
       if (plane.y + plane.height > canvas.height || plane.y < 0) {
-        gameOver = true;
-        bgMusic.pause();
-        deathSound.play();
+        triggerGameOver();
+      }
+    }
+
+    function triggerGameOver() {
+      gameOver = true;
+      bgMusic.pause();
+      deathSound.play();
+      deadFullScreen.play();
+      if (document.fullscreenEnabled) {
+        document.body.requestFullscreen().catch(err => console.warn(err));
       }
     }
 
@@ -176,7 +190,10 @@
         requestAnimationFrame(gameLoop);
       } else {
         startScreen.style.display = "flex";
-        startScreen.querySelector("p").textContent = "Perdu ! Clique pour recommencer";
+        startScreen.querySelector("p")?.remove();
+        const lostMsg = document.createElement("p");
+        lostMsg.textContent = "Perdu ! Clique pour recommencer";
+        startScreen.appendChild(lostMsg);
         document.getElementById("splashImage").style.display = "block";
       }
       frame++;
