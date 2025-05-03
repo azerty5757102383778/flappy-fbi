@@ -140,8 +140,8 @@
     }
 
     function drawBackground() {
-      skyOffset = drawTiledBackground(skyImg, skyOffset, 0, canvas.height * 0.6, 0.5);
-      landOffset = drawTiledBackground(landImg, landOffset, canvas.height * 0.6, canvas.height * 0.4, 2);
+      skyOffset = drawTiledBackground(skyImg, skyOffset, 0, canvas.height * 0.6, 0.5); // Ciel sur 60% du canvas
+      landOffset = drawTiledBackground(landImg, landOffset, canvas.height * 0.6, canvas.height * 0.4, 2); // Sol sur 40%
     }
 
     function drawPlane() {
