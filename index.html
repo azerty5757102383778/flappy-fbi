@@ -25,9 +25,6 @@
       height: 100vh;
       overflow: hidden;
       background: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
     canvas {
       width: 100%;
@@ -130,18 +127,21 @@
       canvas.style.display = "block";
     }
 
+    function drawTiledBackground(img, offset, y, height, speed) {
+      const imgRatio = img.width / img.height;
+      const displayHeight = height;
+      const displayWidth = displayHeight * imgRatio;
+      offset = offset % displayWidth;
+
+      for (let x = -displayWidth + offset; x < canvas.width; x += displayWidth) {
+        ctx.drawImage(img, x, y, displayWidth, displayHeight);
+      }
+      return offset - speed;
+    }
+
     function drawBackground() {
-      skyOffset -= 0.5;
-      landOffset -= 2;
-
-      if (skyOffset <= -canvas.width) skyOffset = 0;
-      if (landOffset <= -canvas.width) landOffset = 0;
-
-      ctx.drawImage(skyImg, skyOffset, 0, canvas.width, canvas.height);
-      ctx.drawImage(skyImg, skyOffset + canvas.width, 0, canvas.width, canvas.height);
-
-      ctx.drawImage(landImg, landOffset, canvas.height - 100, canvas.width, 100);
-      ctx.drawImage(landImg, landOffset + canvas.width, canvas.height - 100, canvas.width, 100);
+      skyOffset = drawTiledBackground(skyImg, skyOffset, 0, canvas.height - 100, 0.5);
+      landOffset = drawTiledBackground(landImg, landOffset, canvas.height - 100, 100, 2);
     }
 
     function drawPlane() {
@@ -191,6 +191,7 @@
       deathSound.play();
       canvas.style.display = "none";
       deadVideo.style.display = "block";
+      deadVideo.currentTime = 0;
       deadVideo.play();
       if (deadVideo.requestFullscreen) {
         deadVideo.requestFullscreen();
@@ -200,21 +201,11 @@
         deadVideo.msRequestFullscreen();
       }
 
-      deadVideo.onended = async () => {
-        try {
-          if (document.fullscreenElement) {
-            await document.exitFullscreen();
-          }
-        } catch (e) {
-          console.warn("Erreur en quittant le plein écran :", e);
-        }
-        deadVideo.pause();
-        deadVideo.currentTime = 0;
+      deadVideo.onended = () => {
+        document.exitFullscreen?.();
         deadVideo.style.display = "none";
-        canvas.style.display = "block";
+        resetGame();
         startScreen.style.display = "flex";
-        gameStarted = false;
-        gameOver = false;
       };
     }
 
