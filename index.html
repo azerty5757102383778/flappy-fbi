@@ -14,9 +14,6 @@
       height: 100vh;
       width: 100vw;
       touch-action: manipulation;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     .canvas-container {
       position: relative;
@@ -185,11 +182,9 @@
       gameOver = true;
       bgMusic.pause();
       deathSound.play();
-      deadVideo.style.display = "block";
-      deadVideo.play();
-      if (document.fullscreenEnabled) {
-        document.body.requestFullscreen().catch(err => console.warn(err));
-      }
+      deadVideo.style.display = "block"; // Show the dead video
+      deadVideo.play(); // Play the dead video
+      canvas.style.display = "none"; // Hide the canvas (game)
     }
 
     function draw() {
