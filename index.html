@@ -25,6 +25,9 @@
       height: 100vh;
       overflow: hidden;
       background: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     canvas {
       width: 100%;
@@ -197,11 +200,21 @@
         deadVideo.msRequestFullscreen();
       }
 
-      deadVideo.onended = () => {
-        document.exitFullscreen?.();
+      deadVideo.onended = async () => {
+        try {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          }
+        } catch (e) {
+          console.warn("Erreur en quittant le plein écran :", e);
+        }
+        deadVideo.pause();
+        deadVideo.currentTime = 0;
         deadVideo.style.display = "none";
-        resetGame();
+        canvas.style.display = "block";
         startScreen.style.display = "flex";
+        gameStarted = false;
+        gameOver = false;
       };
     }
 
