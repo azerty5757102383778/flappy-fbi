@@ -21,7 +21,7 @@
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 100vh;
+      height: 100%;
       overflow: hidden;
       background: white;
     }
@@ -77,8 +77,10 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+
+    // Pour ajuster la taille du canvas à l'orientation portrait
+    canvas.width = Math.min(window.innerWidth, window.innerHeight);  // Largeur = minimum entre largeur et hauteur de la fenêtre
+    canvas.height = canvas.width * 1.5;  // Hauteur = 1.5x la largeur pour garder une orientation portrait (ex. 9:16)
 
     const startScreen = document.getElementById("startScreen");
     const bgMusic = document.getElementById("bgMusic");
@@ -132,7 +134,6 @@
       const displayWidth = displayHeight * imgRatio;
       offset = offset % displayWidth;
 
-      // Image horizontale centrée, petite pour être exactement aux bords
       for (let x = -displayWidth + offset; x < canvas.width; x += displayWidth) {
         ctx.drawImage(img, x, y, displayWidth, displayHeight);
       }
@@ -140,7 +141,7 @@
     }
 
     function drawBackground() {
-      skyOffset = drawTiledBackground(skyImg, skyOffset, 0, canvas.height * 0.6, 0.5); // Ciel sur 60% du canvas
+      skyOffset = drawTiledBackground(skyImg, skyOffset, 0, canvas.height * 0.6, 0.5); // Ciel sur 60% de l'écran
       landOffset = drawTiledBackground(landImg, landOffset, canvas.height * 0.6, canvas.height * 0.4, 2); // Sol sur 40%
     }
 
