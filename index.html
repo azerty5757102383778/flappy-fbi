@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Flappy Plane</title>
   <style>
     html, body {
@@ -11,20 +11,21 @@
       overflow: hidden;
       background: #87ceeb;
       font-family: sans-serif;
+      height: 100vh;
+      width: 100vw;
     }
     canvas {
       display: block;
-      margin: 0 auto;
-      background: url('background.png') repeat-x;
-      background-size: cover;
+      width: 100vw;
+      height: 100vh;
     }
     #startScreen {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
       color: white;
       display: flex;
       align-items: center;
@@ -33,20 +34,31 @@
       font-size: 24px;
       z-index: 10;
     }
+    #splashImage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60%;
+      max-width: 300px;
+      z-index: 11;
+    }
   </style>
 </head>
 <body>
   <div id="startScreen">
-    <p>Clique pour commencer</p>
-    <small>(Clique ou appuie sur Espace pour voler)</small>
+    <img id="splashImage" src="splash.png" alt="Splash">
   </div>
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <audio id="bgMusic" src="bg-music.mp3" loop></audio>
   <audio id="deathSound" src="death-sound.mp3"></audio>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
     const startScreen = document.getElementById("startScreen");
     const bgMusic = document.getElementById("bgMusic");
     const deathSound = document.getElementById("deathSound");
@@ -54,13 +66,19 @@
     const planeImg = new Image();
     planeImg.src = "plane.png";
 
+    const skyImg = new Image();
+    skyImg.src = "sky.png";
+
+    const landImg = new Image();
+    landImg.src = "land.png";
+
     let gameStarted = false;
     let gameOver = false;
     let frame = 0;
 
     const plane = {
-      x: 50,
-      y: 150,
+      x: canvas.width * 0.2,
+      y: canvas.height / 2,
       width: 40,
       height: 30,
       gravity: 0.6,
@@ -69,17 +87,34 @@
     };
 
     let pipes = [];
-    const pipeWidth = 50;
-    const pipeGap = 140;
+    const pipeWidth = 60;
+    const pipeGap = 180;
+
+    let skyOffset = 0;
+    let landOffset = 0;
 
     function resetGame() {
-      plane.y = 150;
+      plane.y = canvas.height / 2;
       plane.velocity = 0;
       pipes = [];
       frame = 0;
       gameOver = false;
       bgMusic.currentTime = 0;
       bgMusic.play();
+    }
+
+    function drawBackground() {
+      skyOffset -= 0.5;
+      landOffset -= 2;
+
+      if (skyOffset <= -canvas.width) skyOffset = 0;
+      if (landOffset <= -canvas.width) landOffset = 0;
+
+      ctx.drawImage(skyImg, skyOffset, 0, canvas.width, canvas.height);
+      ctx.drawImage(skyImg, skyOffset + canvas.width, 0, canvas.width, canvas.height);
+
+      ctx.drawImage(landImg, landOffset, canvas.height - 100, canvas.width, 100);
+      ctx.drawImage(landImg, landOffset + canvas.width, canvas.height - 100, canvas.width, 100);
     }
 
     function drawPlane() {
@@ -100,8 +135,8 @@
       plane.velocity += plane.gravity;
       plane.y += plane.velocity;
 
-      if (frame % 100 === 0) {
-        let top = Math.random() * (canvas.height - pipeGap - 100);
+      if (frame % 120 === 0) {
+        let top = Math.random() * (canvas.height - pipeGap - 200);
         let bottom = top + pipeGap;
         pipes.push({ x: canvas.width, top, bottom });
       }
@@ -129,6 +164,7 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
       drawPlane();
       drawPipes();
     }
@@ -141,6 +177,7 @@
       } else {
         startScreen.style.display = "flex";
         startScreen.querySelector("p").textContent = "Perdu ! Clique pour recommencer";
+        document.getElementById("splashImage").style.display = "block";
       }
       frame++;
     }
@@ -148,6 +185,7 @@
     function startGame() {
       gameStarted = true;
       startScreen.style.display = "none";
+      document.getElementById("splashImage").style.display = "none";
       resetGame();
       gameLoop();
     }
