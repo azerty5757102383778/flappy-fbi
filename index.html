@@ -9,7 +9,8 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: skyblue;
+      background: #87ceeb;
+      font-family: sans-serif;
     }
     canvas {
       display: block;
@@ -17,9 +18,28 @@
       background: url('background.png') repeat-x;
       background-size: cover;
     }
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 24px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
+  <div id="startScreen">
+    <p>Clique pour commencer</p>
+    <small>(Clique ou appuie sur Espace pour voler)</small>
+  </div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <audio id="bgMusic" src="bg-music.mp3" loop></audio>
   <audio id="deathSound" src="death-sound.mp3"></audio>
@@ -27,11 +47,18 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const startScreen = document.getElementById("startScreen");
+    const bgMusic = document.getElementById("bgMusic");
+    const deathSound = document.getElementById("deathSound");
 
     const planeImg = new Image();
     planeImg.src = "plane.png";
 
-    let plane = {
+    let gameStarted = false;
+    let gameOver = false;
+    let frame = 0;
+
+    const plane = {
       x: 50,
       y: 150,
       width: 40,
@@ -42,13 +69,8 @@
     };
 
     let pipes = [];
-    let pipeWidth = 50;
-    let pipeGap = 140;
-    let frame = 0;
-    let gameOver = false;
-
-    const bgMusic = document.getElementById("bgMusic");
-    const deathSound = document.getElementById("deathSound");
+    const pipeWidth = 50;
+    const pipeGap = 140;
 
     function resetGame() {
       plane.y = 150;
@@ -66,15 +88,14 @@
 
     function drawPipes() {
       ctx.fillStyle = "green";
-      for (let i = 0; i < pipes.length; i++) {
-        let p = pipes[i];
+      for (let p of pipes) {
         ctx.fillRect(p.x, 0, pipeWidth, p.top);
         ctx.fillRect(p.x, p.bottom, pipeWidth, canvas.height - p.bottom);
       }
     }
 
     function update() {
-      if (gameOver) return;
+      if (!gameStarted || gameOver) return;
 
       plane.velocity += plane.gravity;
       plane.y += plane.velocity;
@@ -85,13 +106,13 @@
         pipes.push({ x: canvas.width, top, bottom });
       }
 
-      for (let i = 0; i < pipes.length; i++) {
-        pipes[i].x -= 2;
+      for (let p of pipes) {
+        p.x -= 2;
 
         if (
-          plane.x < pipes[i].x + pipeWidth &&
-          plane.x + plane.width > pipes[i].x &&
-          (plane.y < pipes[i].top || plane.y + plane.height > pipes[i].bottom)
+          plane.x < p.x + pipeWidth &&
+          plane.x + plane.width > p.x &&
+          (plane.y < p.top || plane.y + plane.height > p.bottom)
         ) {
           gameOver = true;
           bgMusic.pause();
@@ -115,21 +136,41 @@
     function gameLoop() {
       update();
       draw();
+      if (!gameOver) {
+        requestAnimationFrame(gameLoop);
+      } else {
+        startScreen.style.display = "flex";
+        startScreen.querySelector("p").textContent = "Perdu ! Clique pour recommencer";
+      }
       frame++;
-      requestAnimationFrame(gameLoop);
     }
 
-    window.addEventListener("keydown", function (e) {
-      if (e.code === "Space" && !gameOver) {
-        plane.velocity = plane.lift;
-      } else if (e.code === "Enter" && gameOver) {
-        resetGame();
+    function startGame() {
+      gameStarted = true;
+      startScreen.style.display = "none";
+      resetGame();
+      gameLoop();
+    }
+
+    function handleInput() {
+      if (!gameStarted || gameOver) return;
+      plane.velocity = plane.lift;
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        if (!gameStarted) startGame();
+        handleInput();
       }
     });
 
+    window.addEventListener("mousedown", () => {
+      if (!gameStarted) startGame();
+      handleInput();
+    });
+
     planeImg.onload = () => {
-      bgMusic.play();
-      gameLoop();
+      draw();
     };
   </script>
 </body>
