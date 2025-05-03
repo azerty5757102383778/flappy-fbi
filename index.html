@@ -18,15 +18,14 @@
     .canvas-container {
       position: relative;
       width: 100%;
-      max-width: 430px;
-      aspect-ratio: 9 / 16;
-      background: #87ceeb;
+      height: 100vh; /* Le jeu occupe toute la hauteur */
       overflow: hidden;
     }
     canvas {
       width: 100%;
       height: 100%;
       display: block;
+      position: absolute;
     }
     #startScreen {
       position: absolute;
@@ -130,9 +129,11 @@
       if (skyOffset <= -canvas.width) skyOffset = 0;
       if (landOffset <= -canvas.width) landOffset = 0;
 
+      // Dessiner le ciel (ne pas étirer)
       ctx.drawImage(skyImg, skyOffset, 0, canvas.width, canvas.height);
       ctx.drawImage(skyImg, skyOffset + canvas.width, 0, canvas.width, canvas.height);
 
+      // Dessiner le sol (ne pas étirer)
       ctx.drawImage(landImg, landOffset, canvas.height - 100, canvas.width, 100);
       ctx.drawImage(landImg, landOffset + canvas.width, canvas.height - 100, canvas.width, 100);
     }
@@ -182,9 +183,17 @@
       gameOver = true;
       bgMusic.pause();
       deathSound.play();
-      deadVideo.style.display = "block"; // Show the dead video
-      deadVideo.play(); // Play the dead video
-      canvas.style.display = "none"; // Hide the canvas (game)
+      deadVideo.style.display = "block"; // Montrer la vidéo de mort
+      deadVideo.play(); // Jouer la vidéo de mort
+      canvas.style.display = "none"; // Cacher le jeu (canvas)
+      
+      deadVideo.onended = () => {
+        // Quand la vidéo est terminée, recommencer le jeu
+        gameOver = false;
+        deadVideo.style.display = "none";
+        resetGame();
+        startScreen.style.display = "flex"; // Afficher l'écran de démarrage pour recommencer
+      };
     }
 
     function draw() {
